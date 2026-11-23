@@ -97,8 +97,8 @@ function seed(db) {
     links_json: JSON.stringify([
       { label: 'GitHub', handle: 'github.com/tanj1ns', url: 'https://github.com/tanj1ns', kind: 'github' },
       { label: 'Email', handle: 'shozenhaya@gmail.com', url: 'mailto:shozenhaya@gmail.com', kind: 'email' },
-      { label: 'Kwork', handle: 'Профиль на Kwork (укажите в админке)', url: 'https://kwork.ru', kind: 'freelance' },
-      { label: 'Telegram', handle: 'Укажите @username в админке', url: 'https://t.me', kind: 'telegram' }
+      { label: 'Kwork', handle: 'kwork.ru', url: 'https://kwork.ru', kind: 'freelance' },
+      { label: 'Telegram', handle: 'Написать в Telegram', url: 'https://t.me', kind: 'telegram' }
     ])
   };
 
@@ -134,8 +134,8 @@ function seed(db) {
       JSON.stringify(['Node.js', 'SQLite', 'JavaScript', 'HTML / CSS', 'REST API', 'Telegram Bot API']),
       '/uploads/apex-home.png',
       JSON.stringify(['/uploads/apex-home.png', '/uploads/apex-admin.png']),
-      'http://localhost:3000',
-      'Открыть локальное демо',
+      process.env.APEX_DEMO_URL || 'http://localhost:3000',
+      process.env.APEX_DEMO_URL ? 'Открыть живое демо' : 'Открыть локальное демо',
       'https://github.com/tanj1ns/apex-auto-service',
       '2026',
       1,

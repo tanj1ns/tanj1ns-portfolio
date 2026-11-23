@@ -116,14 +116,16 @@ export default function App() {
               {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
             </button>
 
-            <button
-              type="button"
-              className="btn btn--outline btn--sm"
-              onClick={() => navigate(isAdminRoute ? '/' : '/admin')}
-            >
-              <SlidersHorizontal size={14} />
-              {isAdminRoute ? 'Витрина' : data?.user ? 'Админ-панель' : 'Админ'}
-            </button>
+            {(isAdminRoute || data?.user) && (
+              <button
+                type="button"
+                className="btn btn--outline btn--sm"
+                onClick={() => navigate(isAdminRoute ? '/' : '/admin')}
+              >
+                <SlidersHorizontal size={14} />
+                {isAdminRoute ? 'Витрина' : 'Админ-панель'}
+              </button>
+            )}
           </div>
         </div>
       </header>
@@ -379,7 +381,7 @@ export default function App() {
                     <h2 className="section-title">Где меня найти</h2>
                   </div>
                   <p className="section-desc">
-                    Работаю через проверенные фриланс-биржи или напрямую. Ссылки можно обновлять в любой момент через админ-панель.
+                    Работаю через проверенные фриланс-биржи или напрямую. Выберите удобную площадку для связи.
                   </p>
                 </div>
 
