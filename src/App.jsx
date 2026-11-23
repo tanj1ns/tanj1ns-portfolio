@@ -14,12 +14,22 @@ import {
   ShieldCheck,
   SlidersHorizontal
 } from 'lucide-react';
-import { api, resolveAssetUrl, CATEGORY_LABELS, STATUS_META } from './api.js';
+import {
+  api,
+  isStaticHost,
+  isSecretAdminHash,
+  resolveAssetUrl,
+  CATEGORY_LABELS,
+  STATUS_META
+} from './api.js';
 import ProjectModal from './components/ProjectModal.jsx';
 import AdminPanel from './pages/AdminPanel.jsx';
 
+const SECRET_HASH_SESSION_KEY = 'tanj1ns_secret_hash_cache';
+
 export default function App() {
   const [route, setRoute] = useState(window.location.pathname);
+  const [secretAdminRoute, setSecretAdminRoute] = useState(false);
   const [theme, setTheme] = useState(() => document.documentElement.getAttribute('data-theme') || 'dark');
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -29,33 +39,52 @@ export default function App() {
   const [selectedProject, setSelectedProject] = useState(null);
 
   async function fetchPortfolio() {
-    const isStaticHost = window.location.hostname.endsWith('github.io') || window.location.protocol === 'file:';
-    if (!isStaticHost) {
-      try {
-        const res = await api('/api/portfolio');
-        setData(res);
-        setLoading(false);
-        return;
-      } catch {
-        // Fallback на статический снимок портфолио
-      }
-    }
-    const staticRes = await fetch('./portfolio-data.json');
-    if (staticRes.ok) {
-      const json = await staticRes.json();
-      setData(json);
-    }
+    const res = await api('/api/portfolio');
+    setData(res);
     setLoading(false);
   }
 
+  async function checkSecretHash() {
+    const match = await isSecretAdminHash(window.location.hash);
+    if (match) {
+      sessionStorage.setItem(SECRET_HASH_SESSION_KEY, window.location.hash);
+    }
+    setSecretAdminRoute(match);
+  }
+
   useEffect(() => {
+    checkSecretHash();
     fetchPortfolio().catch(() => setLoading(false));
-    const onPop = () => setRoute(window.location.pathname);
+    const onPop = () => {
+      setRoute(window.location.pathname);
+      checkSecretHash();
+    };
+    const onHash = () => checkSecretHash();
     window.addEventListener('popstate', onPop);
-    return () => window.removeEventListener('popstate', onPop);
+    window.addEventListener('hashchange', onHash);
+    return () => {
+      window.removeEventListener('popstate', onPop);
+      window.removeEventListener('hashchange', onHash);
+    };
   }, []);
 
   function navigate(path) {
+    if (isStaticHost()) {
+      if (path === '/admin') {
+        const cached = sessionStorage.getItem(SECRET_HASH_SESSION_KEY);
+        if (cached) {
+          window.location.hash = cached;
+          setSecretAdminRoute(true);
+        }
+      } else {
+        if (window.location.hash) {
+          window.history.pushState({}, '', window.location.pathname + window.location.search);
+        }
+        setSecretAdminRoute(false);
+      }
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
     if (path !== route) {
       window.history.pushState({}, '', path);
       setRoute(path);
@@ -91,7 +120,7 @@ export default function App() {
     });
   }, [projects, activeCategory, search]);
 
-  const isAdminRoute = route === '/admin';
+  const isAdminRoute = (!isStaticHost() && route === '/admin') || secretAdminRoute;
 
   return (
     <>

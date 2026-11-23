@@ -1,6 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Pencil, Trash2, Upload, LogOut, ArrowLeft, ExternalLink, Star, EyeOff } from 'lucide-react';
-import { api, CATEGORY_LABELS, STATUS_META } from '../api.js';
+import { Plus, Pencil, Trash2, Upload, LogOut, ArrowLeft, ExternalLink, Star, EyeOff, Globe, Download, RotateCcw } from 'lucide-react';
+import {
+  api,
+  isStaticHost,
+  resolveAssetUrl,
+  exportStaticPortfolioPayload,
+  publishStaticToGithub,
+  getSavedGhToken,
+  resetStaticDrafts,
+  CATEGORY_LABELS,
+  STATUS_META
+} from '../api.js';
 
 const EMPTY_PROJECT = {
   title: '',
@@ -52,6 +62,10 @@ export default function AdminPanel({ user, onAuthChange, onBackHome }) {
 
   // Смена пароля
   const [passForm, setPassForm] = useState({ currentPassword: '', newPassword: '' });
+
+  // Публикация в GitHub Pages (для статического хостинга)
+  const [ghToken, setGhToken] = useState(() => getSavedGhToken());
+  const [publishing, setPublishing] = useState(false);
 
   async function loadOverview() {
     const res = await api('/api/admin/overview');
@@ -248,13 +262,45 @@ export default function AdminPanel({ user, onAuthChange, onBackHome }) {
     }
   }
 
+  async function handlePublishGithub() {
+    setPublishing(true);
+    setMsg({ type: '', text: '' });
+    try {
+      await publishStaticToGithub(ghToken);
+      setMsg({ type: 'ok', text: 'Опубликовано! GitHub Pages обновит сайт для всех посетителей через ~20–30 секунд.' });
+    } catch (err) {
+      setMsg({ type: 'err', text: `Ошибка публикации: ${err.message}` });
+    } finally {
+      setPublishing(false);
+    }
+  }
+
+  async function handleDownloadJson() {
+    const payload = await exportStaticPortfolioPayload();
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'portfolio-data.json';
+    a.click();
+    URL.revokeObjectURL(a.href);
+    setMsg({ type: 'ok', text: 'Файл portfolio-data.json скачан' });
+  }
+
+  async function handleResetDrafts() {
+    if (!window.confirm('Сбросить локальные черновики в этом браузере и загрузить опубликованную версию?')) return;
+    resetStaticDrafts();
+    await loadOverview();
+    onAuthChange(user, true);
+    setMsg({ type: 'ok', text: 'Локальные черновики сброшены' });
+  }
+
   // Экран входа
   if (!user || user.role !== 'admin') {
     return (
       <div className="container admin-wrap">
         <div className="admin-login">
           <div>
-            <span className="section-eyebrow">Администрирование</span>
+            <span className="section-eyebrow">Закрытый доступ</span>
             <h1 style={{ fontSize: '1.45rem', marginBottom: 6 }}>Вход в панель портфолио</h1>
             <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>
               Управляйте списком проектов (сайты, боты, приложения), скриншотами и ссылками на биржи.
@@ -270,7 +316,7 @@ export default function AdminPanel({ user, onAuthChange, onBackHome }) {
                 className="input"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="admin@tanj1ns.dev"
+                placeholder="Email администратора"
                 required
               />
             </div>
@@ -292,17 +338,7 @@ export default function AdminPanel({ user, onAuthChange, onBackHome }) {
             </button>
           </form>
 
-          <div style={{ paddingTop: 14, borderTop: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10 }}>
-            <button
-              type="button"
-              className="btn btn--ghost btn--sm"
-              onClick={() => {
-                setEmail('admin@tanj1ns.dev');
-                setPassword('admin12345');
-              }}
-            >
-              Подставить демо-доступ
-            </button>
+          <div style={{ paddingTop: 14, borderTop: '1px solid var(--border)', display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
             <button type="button" className="btn btn--ghost btn--sm" onClick={onBackHome}>
               <ArrowLeft size={14} /> На витрину
             </button>
@@ -341,6 +377,40 @@ export default function AdminPanel({ user, onAuthChange, onBackHome }) {
         </button>
       </div>
 
+      {isStaticHost() && (
+        <div className="panel" style={{ marginBottom: 18, padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+            <div>
+              <strong style={{ fontSize: '0.94rem' }}>Публикация изменений на GitHub Pages</strong>
+              <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginTop: 2 }}>
+                Правки сразу сохраняются в вашем браузере. Чтобы их увидели все посетители сайта, нажмите «Опубликовать для всех» (нужен ваш GitHub Token, хранится только в этом браузере) или скачайте JSON.
+              </p>
+            </div>
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+              <button type="button" className="btn btn--outline btn--sm" onClick={handleDownloadJson}>
+                <Download size={14} /> Скачать JSON
+              </button>
+              <button type="button" className="btn btn--ghost btn--sm" onClick={handleResetDrafts}>
+                <RotateCcw size={14} /> Сбросить черновик
+              </button>
+            </div>
+          </div>
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            <input
+              type="password"
+              className="input"
+              style={{ flex: '1 1 260px', padding: '8px 12px', fontSize: '0.86rem' }}
+              value={ghToken}
+              onChange={(e) => setGhToken(e.target.value)}
+              placeholder="GitHub Personal Access Token (ghp_... / github_pat_...)"
+            />
+            <button type="button" className="btn btn--primary btn--sm" onClick={handlePublishGithub} disabled={publishing}>
+              <Globe size={14} /> {publishing ? 'Публикуем...' : 'Опубликовать для всех'}
+            </button>
+          </div>
+        </div>
+      )}
+
       {msg.text && (
         <p className={`status-msg ${msg.type === 'ok' ? 'status-msg--ok' : 'status-msg--err'}`} style={{ marginBottom: 16 }}>
           {msg.text}
@@ -371,7 +441,7 @@ export default function AdminPanel({ user, onAuthChange, onBackHome }) {
                     <div key={p.id} className="admin-row">
                       <div className="admin-row__left">
                         {p.coverImage ? (
-                          <img src={p.coverImage} alt="" className="admin-row__thumb" />
+                          <img src={resolveAssetUrl(p.coverImage)} alt="" className="admin-row__thumb" />
                         ) : (
                           <div className="admin-row__thumb" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.72rem', color: 'var(--text-muted)' }}>
                             Нет фото
