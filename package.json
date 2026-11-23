@@ -1,0 +1,23 @@
+{
+  "name": "tanj1ns-portfolio",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Персональное портфолио разработчика TanJ1ns: витрина сайтов, веб-приложений, Telegram-ботов и инструментов с админ-панелью (React + Vite + Node.js + SQLite).",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "start": "node server/index.js"
+  },
+  "dependencies": {
+    "lucide-react": "^0.511.0",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.5.0",
+    "vite": "^6.3.5"
+  },
+  "engines": {
+    "node": ">=22.5.0"
+  }
+}
