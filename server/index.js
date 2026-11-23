@@ -7,6 +7,7 @@ const crypto = require('node:crypto');
 const { URL } = require('node:url');
 
 const { initDatabase, getProfile, mapProject, DATA_DIR } = require('./db');
+const { exportStatic } = require('../scripts/export-static');
 const {
   hashPassword,
   verifyPassword,
@@ -191,6 +192,7 @@ async function handleApi(req, res, pathname) {
       if (Array.isArray(body.links)) {
         stmt.run('links_json', JSON.stringify(body.links));
       }
+      try { exportStatic(db); } catch {}
       return sendJson(res, 200, { ok: true, profile: getProfile(db) });
     }
 
@@ -255,6 +257,7 @@ async function handleApi(req, res, pathname) {
         );
 
       const created = db.prepare('SELECT * FROM projects WHERE id = ?').get(Number(info.lastInsertRowid));
+      try { exportStatic(db); } catch {}
       return sendJson(res, 201, { ok: true, project: mapProject(created) });
     }
 
@@ -296,11 +299,13 @@ async function handleApi(req, res, pathname) {
           id
         );
         const updated = db.prepare('SELECT * FROM projects WHERE id = ?').get(id);
+        try { exportStatic(db); } catch {}
         return sendJson(res, 200, { ok: true, project: mapProject(updated) });
       }
 
       if (method === 'DELETE') {
         db.prepare('DELETE FROM projects WHERE id = ?').run(id);
+        try { exportStatic(db); } catch {}
         return sendJson(res, 200, { ok: true });
       }
     }

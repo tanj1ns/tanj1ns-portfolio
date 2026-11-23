@@ -1,0 +1,122 @@
+{
+  "ok": true,
+  "staticMode": true,
+  "profile": {
+    "display_name": "TanJ1ns",
+    "role_title": "Веб-разработчик · Full-Stack",
+    "availability": "Принимаю заказы на фриланс-биржах",
+    "headline": "Делаю сайты, веб-приложения и Telegram-ботов под задачи бизнеса",
+    "bio": "Проектирую и запускаю понятные цифровые продукты: от многостраничных коммерческих сайтов с админ-панелями до веб-сервисов, ботов и автоматизации. Здесь собраны мои живые проекты, скриншоты и ссылки на исходный код.",
+    "focus_note": "Все проекты доступны онлайн по HTTPS с российских IP без VPN.",
+    "skills_json": "[\"React\",\"Vite\",\"JavaScript (ES2024)\",\"Node.js\",\"SQLite\",\"REST API\",\"HTML5 / CSS3\",\"Telegram Bot API\",\"Git / GitHub\"]",
+    "links_json": "[{\"label\":\"GitHub\",\"handle\":\"github.com/tanj1ns\",\"url\":\"https://github.com/tanj1ns\",\"kind\":\"github\"},{\"label\":\"Email\",\"handle\":\"shozenhaya@gmail.com\",\"url\":\"mailto:shozenhaya@gmail.com\",\"kind\":\"email\"},{\"label\":\"Kwork\",\"handle\":\"kwork.ru\",\"url\":\"https://kwork.ru\",\"kind\":\"freelance\"},{\"label\":\"Telegram\",\"handle\":\"Написать в Telegram\",\"url\":\"https://t.me\",\"kind\":\"telegram\"}]",
+    "skills": [
+      "React",
+      "Vite",
+      "JavaScript (ES2024)",
+      "Node.js",
+      "SQLite",
+      "REST API",
+      "HTML5 / CSS3",
+      "Telegram Bot API",
+      "Git / GitHub"
+    ],
+    "links": [
+      {
+        "label": "GitHub",
+        "handle": "github.com/tanj1ns",
+        "url": "https://github.com/tanj1ns",
+        "kind": "github"
+      },
+      {
+        "label": "Email",
+        "handle": "shozenhaya@gmail.com",
+        "url": "mailto:shozenhaya@gmail.com",
+        "kind": "email"
+      },
+      {
+        "label": "Kwork",
+        "handle": "kwork.ru",
+        "url": "https://kwork.ru",
+        "kind": "freelance"
+      },
+      {
+        "label": "Telegram",
+        "handle": "Написать в Telegram",
+        "url": "https://t.me",
+        "kind": "telegram"
+      }
+    ]
+  },
+  "categories": [
+    {
+      "id": "all",
+      "label": "Все проекты"
+    },
+    {
+      "id": "website",
+      "label": "Сайты"
+    },
+    {
+      "id": "webapp",
+      "label": "Веб-приложения"
+    },
+    {
+      "id": "telegram_bot",
+      "label": "Telegram-боты"
+    },
+    {
+      "id": "mini_app",
+      "label": "Mini Apps"
+    },
+    {
+      "id": "desktop_mobile",
+      "label": "Приложения"
+    },
+    {
+      "id": "automation",
+      "label": "Автоматизация"
+    }
+  ],
+  "projects": [
+    {
+      "id": 1,
+      "slug": "apex-auto-service",
+      "title": "АПЕКС АВТО — Многостраничный сайт автосервиса (CMS + CRM)",
+      "subtitle": "Полноценное веб-приложение техцентра с прайс-листом, калькулятором сметы, личным кабинетом клиента, админ-панелью и заявками в Telegram.",
+      "category": "webapp",
+      "status": "live",
+      "description": "Коммерческий проект автосервиса полного цикла с разделением ролей (клиент и администратор). Реализованы отдельные страницы разделов, сквозная смета с синхронизацией между прайс-листом и калькулятором, хранение заявок и контента в SQLite, загрузка фотографий выполненных работ и безопасная серверная отправка уведомлений в Telegram-бота.",
+      "features": [
+        "Многостраничная структура: главная, прайс-лист с умным поиском, кейсы, калькулятор, запись, контакты",
+        "Регистрация и авторизация на scrypt + HttpOnly-сессии с разделением ролей USER и ADMIN",
+        "Личный кабинет клиента с профилем авто и живыми статусами ремонта",
+        "Админ-панель (CMS + CRM): управление заявками, услугами, кейсами, отзывами, FAQ, настройками и ролями",
+        "Серверная интеграция с Telegram Bot API без утечки токена на фронтенд",
+        "Светлая и тёмная темы, адаптив под мобильные устройства и печать сметы"
+      ],
+      "stack": [
+        "Node.js",
+        "SQLite",
+        "JavaScript",
+        "HTML / CSS",
+        "REST API",
+        "Telegram Bot API"
+      ],
+      "coverImage": "/uploads/apex-home.png",
+      "gallery": [
+        "/uploads/apex-home.png",
+        "/uploads/apex-admin.png"
+      ],
+      "demoUrl": "https://tanj1ns.github.io/apex-auto-service/",
+      "demoLabel": "Открыть живое демо",
+      "repoUrl": "https://github.com/tanj1ns/apex-auto-service",
+      "year": "2026",
+      "featured": true,
+      "published": true,
+      "sortOrder": 1,
+      "createdAt": "2026-11-23T13:59:19.313Z"
+    }
+  ],
+  "user": null
+}

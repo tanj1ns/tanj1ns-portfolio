@@ -14,7 +14,7 @@ import {
   ShieldCheck,
   SlidersHorizontal
 } from 'lucide-react';
-import { api, CATEGORY_LABELS, STATUS_META } from './api.js';
+import { api, resolveAssetUrl, CATEGORY_LABELS, STATUS_META } from './api.js';
 import ProjectModal from './components/ProjectModal.jsx';
 import AdminPanel from './pages/AdminPanel.jsx';
 
@@ -29,8 +29,22 @@ export default function App() {
   const [selectedProject, setSelectedProject] = useState(null);
 
   async function fetchPortfolio() {
-    const res = await api('/api/portfolio');
-    setData(res);
+    const isStaticHost = window.location.hostname.endsWith('github.io') || window.location.protocol === 'file:';
+    if (!isStaticHost) {
+      try {
+        const res = await api('/api/portfolio');
+        setData(res);
+        setLoading(false);
+        return;
+      } catch {
+        // Fallback на статический снимок портфолио
+      }
+    }
+    const staticRes = await fetch('./portfolio-data.json');
+    if (staticRes.ok) {
+      const json = await staticRes.json();
+      setData(json);
+    }
     setLoading(false);
   }
 
@@ -252,7 +266,7 @@ export default function App() {
                         <article key={project.id} className="project-card">
                           <div className="project-card__media" onClick={() => setSelectedProject(project)}>
                             {project.coverImage ? (
-                              <img src={project.coverImage} alt={project.title} loading="lazy" />
+                              <img src={resolveAssetUrl(project.coverImage)} alt={project.title} loading="lazy" />
                             ) : (
                               <div className="project-card__placeholder">
                                 <Layers size={28} />

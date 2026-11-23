@@ -1,13 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { ExternalLink, Github, X } from 'lucide-react';
-import { CATEGORY_LABELS, STATUS_META } from '../api.js';
+import { resolveAssetUrl, CATEGORY_LABELS, STATUS_META } from '../api.js';
 
 export default function ProjectModal({ project, onClose }) {
-  const images = project.gallery?.length
-    ? project.gallery
-    : project.coverImage
-      ? [project.coverImage]
-      : [];
+  const images = (
+    project.gallery?.length
+      ? project.gallery
+      : project.coverImage
+        ? [project.coverImage]
+        : []
+  ).map(resolveAssetUrl);
   const [activeImg, setActiveImg] = useState(images[0] || '');
 
   useEffect(() => {

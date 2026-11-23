@@ -17,6 +17,13 @@ export async function api(url, options = {}) {
   return data;
 }
 
+export function resolveAssetUrl(url) {
+  if (!url) return '';
+  if (/^(https?:|data:|blob:|\.\.?\/)/i.test(url)) return url;
+  if (url.startsWith('/')) return `.${url}`;
+  return url;
+}
+
 export const CATEGORY_LABELS = {
   all: 'Все проекты',
   website: 'Сайт',

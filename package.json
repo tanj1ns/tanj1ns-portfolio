@@ -6,6 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "export-static": "node scripts/export-static.js",
+    "publish": "node scripts/publish-gh-pages.js",
     "start": "node server/index.js"
   },
   "dependencies": {
