@@ -1,14 +1,11 @@
 meta:
-  environment: nodejs
+  environment: docker
   toolchain:
-    name: npm
-    version: "22"
+    name: docker
 
 build:
-  artifacts:
-    "*": /
+  dockerfile: Dockerfile
 
 run:
-  command: npm run build && node server/index.js
   containerPort: 4000
   persistenceMount: /data

@@ -115,6 +115,11 @@ function serveFile(res, filePath) {
 
 async function handleApi(req, res, pathname) {
   const method = req.method;
+
+  if (method === 'GET' && pathname === '/api/health') {
+    return sendJson(res, 200, { ok: true, service: 'tanj1ns-portfolio' });
+  }
+
   const user = getSessionUser(db, req);
 
   // Публичные данные витрины
