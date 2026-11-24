@@ -103,10 +103,10 @@
         "REST API",
         "Telegram Bot API"
       ],
-      "coverImage": "/uploads/apex-home.png",
+      "coverImage": "/uploads/apex-home.webp",
       "gallery": [
-        "/uploads/apex-home.png",
-        "/uploads/apex-admin.png"
+        "/uploads/apex-home.webp",
+        "/uploads/apex-admin.webp"
       ],
       "demoUrl": "https://tanj1ns.github.io/apex-auto-service/",
       "demoLabel": "Открыть живое демо",

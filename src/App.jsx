@@ -12,7 +12,11 @@ import {
   Bot,
   Cpu,
   ShieldCheck,
-  SlidersHorizontal
+  SlidersHorizontal,
+  Menu,
+  X,
+  Copy,
+  Check
 } from 'lucide-react';
 import {
   api,
@@ -38,6 +42,8 @@ export default function App() {
   const [activeCategory, setActiveCategory] = useState('all');
   const [search, setSearch] = useState('');
   const [selectedProject, setSelectedProject] = useState(null);
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const [copiedEmail, setCopiedEmail] = useState(false);
 
   async function fetchPortfolio() {
     const res = await api('/api/portfolio');
@@ -68,6 +74,21 @@ export default function App() {
       window.removeEventListener('hashchange', onHash);
     };
   }, []);
+
+  useEffect(() => {
+    const list = data?.projects || [];
+    if (!list.length) return;
+    const checkProjectHash = () => {
+      const m = window.location.hash.match(/^#project=([^&]+)/);
+      if (!m) return;
+      const target = decodeURIComponent(m[1]);
+      const found = list.find((p) => p.slug === target || String(p.id) === target);
+      if (found) setSelectedProject(found);
+    };
+    checkProjectHash();
+    window.addEventListener('hashchange', checkProjectHash);
+    return () => window.removeEventListener('hashchange', checkProjectHash);
+  }, [data?.projects]);
 
   function navigate(path) {
     if (isStaticHost()) {
@@ -142,10 +163,11 @@ export default function App() {
           </a>
 
           {!isAdminRoute && (
-            <nav className="nav" aria-label="Навигация">
-              <a href="#projects" className="nav__link">Проекты</a>
-              <a href="#about" className="nav__link">Направления и стек</a>
-              <a href="#contacts" className="nav__link">Фриланс-площадки</a>
+            <nav className={`nav ${mobileNavOpen ? 'is-open' : ''}`} aria-label="Навигация">
+              <a href="#projects" className="nav__link" onClick={() => setMobileNavOpen(false)}>Проекты</a>
+              <a href="#workflow" className="nav__link" onClick={() => setMobileNavOpen(false)}>Как работаю</a>
+              <a href="#about" className="nav__link" onClick={() => setMobileNavOpen(false)}>Направления и стек</a>
+              <a href="#contacts" className="nav__link" onClick={() => setMobileNavOpen(false)}>Фриланс-площадки</a>
             </nav>
           )}
 
@@ -159,6 +181,18 @@ export default function App() {
             >
               {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
             </button>
+
+            {!isAdminRoute && (
+              <button
+                type="button"
+                className="icon-btn mobile-menu-btn"
+                onClick={() => setMobileNavOpen((o) => !o)}
+                aria-label={mobileNavOpen ? 'Закрыть меню' : 'Открыть меню'}
+                aria-expanded={mobileNavOpen}
+              >
+                {mobileNavOpen ? <X size={16} /> : <Menu size={16} />}
+              </button>
+            )}
 
             {(isAdminRoute || data?.user) && (
               <button
@@ -247,19 +281,21 @@ export default function App() {
 
                 <div className="toolbar">
                   <div className="tabs" role="tablist">
-                    {categories.map((cat) => (
-                      <button
-                        key={cat.id}
-                        type="button"
-                        role="tab"
-                        aria-selected={activeCategory === cat.id}
-                        className={`tab ${activeCategory === cat.id ? 'is-active' : ''}`}
-                        onClick={() => setActiveCategory(cat.id)}
-                      >
-                        <span>{cat.label}</span>
-                        <span className="tab__count">{categoryCounts[cat.id] || 0}</span>
-                      </button>
-                    ))}
+                    {categories
+                      .filter((cat) => cat.id === 'all' || (categoryCounts[cat.id] || 0) > 0)
+                      .map((cat) => (
+                        <button
+                          key={cat.id}
+                          type="button"
+                          role="tab"
+                          aria-selected={activeCategory === cat.id}
+                          className={`tab ${activeCategory === cat.id ? 'is-active' : ''}`}
+                          onClick={() => setActiveCategory(cat.id)}
+                        >
+                          <span>{cat.label}</span>
+                          <span className="tab__count">{categoryCounts[cat.id] || 0}</span>
+                        </button>
+                      ))}
                   </div>
 
                   <div className="search-wrap">
@@ -367,6 +403,44 @@ export default function App() {
               </div>
             </section>
 
+            {/* КАК СТРОИТСЯ РАБОТА */}
+            <section className="section" id="workflow">
+              <div className="container">
+                <div className="section-head">
+                  <div>
+                    <span className="section-eyebrow">Процесс</span>
+                    <h2 className="section-title">Как строится работа над проектом</h2>
+                  </div>
+                  <p className="section-desc">
+                    Понятные этапы без воды: от оценки задачи до рабочего демо-стенда и передачи чистого кода.
+                  </p>
+                </div>
+
+                <ol className="workflow-grid">
+                  <li className="workflow-step">
+                    <span className="workflow-step__num mono">01</span>
+                    <h3>Задача и точная оценка</h3>
+                    <p>Фиксируем состав страниц, интеграции, сроки и стоимость до старта разработки.</p>
+                  </li>
+                  <li className="workflow-step">
+                    <span className="workflow-step__num mono">02</span>
+                    <h3>Прототип и архитектура</h3>
+                    <p>Собираем чистую структуру интерфейса, схему базы данных и базовые меры безопасности.</p>
+                  </li>
+                  <li className="workflow-step">
+                    <span className="workflow-step__num mono">03</span>
+                    <h3>Разработка и демо-стенд</h3>
+                    <p>Показываю живую ссылку на каждом этапе — можно сразу кликать с компьютера и телефона.</p>
+                  </li>
+                  <li className="workflow-step">
+                    <span className="workflow-step__num mono">04</span>
+                    <h3>Деплой и передача</h3>
+                    <p>Разворачиваю проект на сервере с доступом из РФ без VPN и передаю все исходники.</p>
+                  </li>
+                </ol>
+              </div>
+            </section>
+
             {/* НАПРАВЛЕНИЯ И СТЕК */}
             <section className="section section--alt" id="about">
               <div className="container">
@@ -450,6 +524,31 @@ export default function App() {
                     );
                   })}
                 </div>
+
+                {(() => {
+                  const emailLnk = (profile.links || []).find((l) => String(l.url || '').startsWith('mailto:'))
+                    || { handle: 'shozenhaya@gmail.com' };
+                  return (
+                    <div className="contacts-actions">
+                      <button
+                        type="button"
+                        className="btn btn--outline btn--sm"
+                        onClick={async () => {
+                          try {
+                            await navigator.clipboard.writeText(emailLnk.handle);
+                            setCopiedEmail(true);
+                            setTimeout(() => setCopiedEmail(false), 2000);
+                          } catch {
+                            // ignore
+                          }
+                        }}
+                      >
+                        {copiedEmail ? <Check size={14} color="var(--success)" /> : <Copy size={14} />}
+                        {copiedEmail ? `Скопировано: ${emailLnk.handle}` : `Скопировать Email (${emailLnk.handle})`}
+                      </button>
+                    </div>
+                  );
+                })()}
               </div>
             </section>
           </>

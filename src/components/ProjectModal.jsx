@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ExternalLink, Github, X } from 'lucide-react';
+import { ExternalLink, Github, X, Link2, Check } from 'lucide-react';
 import { resolveAssetUrl, safeHref, CATEGORY_LABELS, STATUS_META } from '../api.js';
 
 export default function ProjectModal({ project, onClose }) {
@@ -10,12 +10,20 @@ export default function ProjectModal({ project, onClose }) {
         ? [project.coverImage]
         : []
   ).map(resolveAssetUrl);
-  const [activeImg, setActiveImg] = useState(images[0] || '');
+  const [activeIdx, setActiveIdx] = useState(0);
+  const [copiedLink, setCopiedLink] = useState(false);
 
   useEffect(() => {
-    setActiveImg(images[0] || '');
+    setActiveIdx(0);
+    setCopiedLink(false);
     const onKey = (e) => {
       if (e.key === 'Escape') onClose();
+      if (images.length > 1 && e.key === 'ArrowLeft') {
+        setActiveIdx((idx) => (idx - 1 + images.length) % images.length);
+      }
+      if (images.length > 1 && e.key === 'ArrowRight') {
+        setActiveIdx((idx) => (idx + 1) % images.length);
+      }
     };
     document.addEventListener('keydown', onKey);
     document.body.style.overflow = 'hidden';
@@ -23,9 +31,22 @@ export default function ProjectModal({ project, onClose }) {
       document.removeEventListener('keydown', onKey);
       document.body.style.overflow = '';
     };
-  }, [project]);
+  }, [project, images.length]);
 
+  const activeImg = images[activeIdx] || '';
   const statusInfo = STATUS_META[project.status] || STATUS_META.live;
+
+  async function handleCopyCaseLink() {
+    const slug = project.slug || project.id;
+    const shareUrl = `${window.location.origin}${window.location.pathname}#project=${encodeURIComponent(slug)}`;
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      setCopiedLink(true);
+      setTimeout(() => setCopiedLink(false), 2000);
+    } catch {
+      window.location.hash = `project=${encodeURIComponent(slug)}`;
+    }
+  }
 
   return (
     <div className="modal-backdrop" onClick={(e) => e.target === e.currentTarget && onClose()}>
@@ -56,8 +77,8 @@ export default function ProjectModal({ project, onClose }) {
                     src={src}
                     alt=""
                     draggable={false}
-                    className={`modal-thumb ${src === activeImg ? 'is-active' : ''}`}
-                    onClick={() => setActiveImg(src)}
+                    className={`modal-thumb ${idx === activeIdx ? 'is-active' : ''}`}
+                    onClick={() => setActiveIdx(idx)}
                   />
                 ))}
               </div>
@@ -101,6 +122,10 @@ export default function ProjectModal({ project, onClose }) {
               Код на GitHub
             </a>
           )}
+          <button type="button" className="btn btn--ghost" onClick={handleCopyCaseLink}>
+            {copiedLink ? <Check size={16} color="var(--success)" /> : <Link2 size={16} />}
+            {copiedLink ? 'Ссылка скопирована' : 'Скопировать ссылку на кейс'}
+          </button>
         </div>
       </div>
     </div>

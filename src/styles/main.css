@@ -895,9 +895,52 @@ button, input, select, textarea { font-family: inherit; }
   gap: 12px;
 }
 
+.mobile-menu-btn {
+  display: none;
+}
+
+.workflow-grid {
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+}
+
+.workflow-step {
+  border-top: 1px solid var(--border-strong);
+  padding-top: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.workflow-step__num {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--accent);
+}
+
+.workflow-step h3 {
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.workflow-step p {
+  font-size: 0.89rem;
+  color: var(--text-muted);
+}
+
+.contacts-actions {
+  margin-top: 16px;
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
 @media (max-width: 900px) {
   .projects-grid,
   .directions-grid,
+  .workflow-grid,
   .links-grid,
   .form-grid {
     grid-template-columns: 1fr;
@@ -905,8 +948,25 @@ button, input, select, textarea { font-family: inherit; }
 }
 
 @media (max-width: 680px) {
+  .mobile-menu-btn {
+    display: inline-flex;
+  }
   .nav {
     display: none;
+    position: fixed;
+    top: 64px;
+    left: 0;
+    right: 0;
+    background-color: var(--bg);
+    border-bottom: 1px solid var(--border);
+    padding: 18px 24px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 14px;
+    z-index: 95;
+  }
+  .nav.is-open {
+    display: flex;
   }
   .hero {
     padding: 56px 0 48px;

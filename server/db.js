@@ -132,8 +132,8 @@ function seed(db) {
         'Светлая и тёмная темы, адаптив под мобильные устройства и печать сметы'
       ]),
       JSON.stringify(['Node.js', 'SQLite', 'JavaScript', 'HTML / CSS', 'REST API', 'Telegram Bot API']),
-      '/uploads/apex-home.png',
-      JSON.stringify(['/uploads/apex-home.png', '/uploads/apex-admin.png']),
+      '/uploads/apex-home.webp',
+      JSON.stringify(['/uploads/apex-home.webp', '/uploads/apex-admin.webp']),
       process.env.APEX_DEMO_URL || 'https://tanj1ns.github.io/apex-auto-service/',
       'Открыть живое демо',
       'https://github.com/tanj1ns/apex-auto-service',
