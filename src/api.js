@@ -5,7 +5,7 @@ const ADMIN_EMAIL = 'admin@tanj1ns.dev';
 const ADMIN_PASS_SALT = 'tanj1ns-adm-v1:';
 const DEFAULT_ADMIN_PASS_HASH = '1f908563b0fd366c903a0ac83605723b9aba2241b1b20246fc35a2cf3e517b79';
 
-const STATIC_DB_KEY = 'tanj1ns_static_cms_v1';
+const STATIC_DB_KEY = 'tanj1ns_static_cms_v2';
 const STATIC_SESSION_KEY = 'tanj1ns_static_admin_session_v1';
 const STATIC_PASS_HASH_KEY = 'tanj1ns_static_admin_hash_v1';
 const LOGIN_GUARD_KEY = 'tanj1ns_login_guard_v1';
@@ -57,24 +57,23 @@ async function fetchBaseSnapshot() {
 async function loadStaticStore() {
   try {
     const saved = JSON.parse(localStorage.getItem(STATIC_DB_KEY) || 'null');
-    if (saved && saved.profile && Array.isArray(saved.projects)) {
+    if (saved && saved.adminModified === true && saved.profile && Array.isArray(saved.projects)) {
       return saved;
     }
   } catch {
     // ignore corrupt storage
   }
   const base = await fetchBaseSnapshot();
-  const initial = {
+  return {
     profile: base.profile || {},
     categories: base.categories || [],
     projects: base.projects || [],
     nextId: Math.max(10, ...(base.projects || []).map((p) => Number(p.id) || 0)) + 1
   };
-  localStorage.setItem(STATIC_DB_KEY, JSON.stringify(initial));
-  return initial;
 }
 
 function saveStaticStore(store) {
+  store.adminModified = true;
   localStorage.setItem(STATIC_DB_KEY, JSON.stringify(store));
 }
 

@@ -107,40 +107,174 @@ function seed(db) {
     insertSetting.run(k, String(v));
   }
 
-  // Первый реальный проект — АПЕКС АВТО
-  const projCount = db.prepare('SELECT COUNT(*) AS cnt FROM projects').get().cnt;
-  if (projCount === 0) {
-    db.prepare(
-      `INSERT INTO projects (
-        slug, title, subtitle, category, status, description,
-        features_json, stack_json, cover_image, gallery_json,
-        demo_url, demo_label, repo_url, year, featured, published, sort_order, created_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
-    ).run(
-      'apex-auto-service',
-      'АПЕКС АВТО — Многостраничный сайт автосервиса (CMS + CRM)',
-      'Полноценное веб-приложение техцентра с прайс-листом, калькулятором сметы, личным кабинетом клиента, админ-панелью и заявками в Telegram.',
-      'webapp',
-      'live',
-      'Коммерческий проект автосервиса полного цикла с разделением ролей (клиент и администратор). Реализованы отдельные страницы разделов, сквозная смета с синхронизацией между прайс-листом и калькулятором, хранение заявок и контента в SQLite, загрузка фотографий выполненных работ и безопасная серверная отправка уведомлений в Telegram-бота.',
-      JSON.stringify([
-        'Многостраничная структура: главная, прайс-лист с умным поиском, кейсы, калькулятор, запись, контакты',
-        'Регистрация и авторизация на scrypt + HttpOnly-сессии с разделением ролей USER и ADMIN',
-        'Личный кабинет клиента с профилем авто и живыми статусами ремонта',
-        'Админ-панель (CMS + CRM): управление заявками, услугами, кейсами, отзывами, FAQ, настройками и ролями',
-        'Серверная интеграция с Telegram Bot API без утечки токена на фронтенд',
-        'Светлая и тёмная темы, адаптив под мобильные устройства и печать сметы'
-      ]),
-      JSON.stringify(['Node.js', 'SQLite', 'JavaScript', 'HTML / CSS', 'REST API', 'Telegram Bot API']),
-      '/uploads/apex-home.webp',
-      JSON.stringify(['/uploads/apex-home.webp', '/uploads/apex-admin.webp']),
-      process.env.APEX_DEMO_URL || 'https://tanj1ns.github.io/apex-auto-service/',
+  // Актуальная витрина всех 6 живых проектов (upsert по slug сохраняет данные даже при существующей БД)
+  const upsertProject = db.prepare(
+    `INSERT INTO projects (
+      slug, title, subtitle, category, status, description,
+      features_json, stack_json, cover_image, gallery_json,
+      demo_url, demo_label, repo_url, year, featured, published, sort_order, created_at
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ON CONFLICT(slug) DO UPDATE SET
+      title = excluded.title,
+      subtitle = excluded.subtitle,
+      category = excluded.category,
+      status = excluded.status,
+      description = excluded.description,
+      features_json = excluded.features_json,
+      stack_json = excluded.stack_json,
+      cover_image = excluded.cover_image,
+      gallery_json = excluded.gallery_json,
+      demo_url = excluded.demo_url,
+      demo_label = excluded.demo_label,
+      repo_url = excluded.repo_url,
+      year = excluded.year,
+      featured = excluded.featured,
+      published = excluded.published,
+      sort_order = excluded.sort_order`
+  );
+
+  const showcaseProjects = [
+    {
+      slug: 'apex-auto-service',
+      title: 'АПЕКС АВТО — Многостраничный сайт автосервиса (CMS + CRM)',
+      subtitle: 'Полноценное веб-приложение техцентра с прайс-листом, калькулятором сметы, личным кабинетом клиента, админ-панелью и заявками в Telegram.',
+      category: 'website',
+      status: 'live',
+      description: 'Коммерческий сайт автосервиса полного цикла с разделением ролей (клиент и администратор). Отдельные страницы разделов, сквозная смета с синхронизацией между прайс-листом и калькулятором, карта Яндекс, форма 152-ФЗ и защищённая серверная отправка заявок в Telegram.',
+      features: [
+        'Многостраничная структура: главная, прайс-лист с поиском, кейсы, калькулятор, запись, контакты с картой',
+        'Авторизация на scrypt + HttpOnly-сессии и личный кабинет клиента с историей по номеру телефона',
+        'Админ-панель (CMS + CRM): управление заявками, услугами, кейсами, отзывами, FAQ и настройками',
+        'Безопасность: CSP, rate limiting, проверка CSRF Origin/Host, honeypot, согласие по 152-ФЗ'
+      ],
+      stack: ['Node.js', 'SQLite', 'JavaScript', 'HTML / CSS', 'Telegram Bot API'],
+      coverImage: '/uploads/apex-home.webp',
+      gallery: ['/uploads/apex-home.webp', '/uploads/apex-admin.webp'],
+      demoUrl: process.env.APEX_DEMO_URL || 'https://tanj1ns.github.io/apex-auto-service/',
+      repoUrl: 'https://github.com/tanj1ns/apex-auto-service',
+      sortOrder: 1
+    },
+    {
+      slug: 'forma-booking',
+      title: 'ФОРМА — Сервис онлайн-записи и расписания мастеров',
+      subtitle: 'Интерактивное бронирование услуг, барберов и свободных окон в реальном времени с переносом/отменой визита и закрытым кабинетом студии.',
+      category: 'webapp',
+      status: 'live',
+      description: 'Веб-приложение записи для мужской студии: клиент выбирает услугу по категории, конкретного мастера или опцию «любой свободный», видит живую матрицу занятости по датам и получает код бронирования FRM-XXXX для самостоятельного переноса или отмены.',
+      features: [
+        'Пошаговая запись без звонков: фильтр услуг, профиль и рейтинг мастера, календарь слотов',
+        'Проверка конфликтов расписания и автоподбор свободного мастера на сервере',
+        'Управление существующей записью по коду (перенос даты/времени или отмена)',
+        'Закрытый кабинет администратора: сетка слотов, блокировка перерывов и смена статусов'
+      ],
+      stack: ['React 19', 'Vite 6', 'Node.js', 'SQLite', 'REST API'],
+      coverImage: '/uploads/forma-home.webp',
+      gallery: ['/uploads/forma-home.webp'],
+      demoUrl: 'https://tanj1ns.github.io/forma-booking/',
+      repoUrl: 'https://github.com/tanj1ns/forma-booking',
+      sortOrder: 2
+    },
+    {
+      slug: 'sever-store',
+      title: 'СЕВЕР — Интернет-магазин одежды с корзиной и трекером',
+      subtitle: 'Минималистичный магазин технологичной одежды с фильтрами по категориям и размерам, выдвижной корзиной, промокодами и CMS заказов.',
+      category: 'webapp',
+      status: 'live',
+      description: 'Полноценный интернет-магазин бренда городской одежды: быстрая фильтрация по размерам, поиск, карточка товара с характеристиками, расчёт доставки (ПВЗ СДЭК, курьер, самовывоз от 7 000 ₽ бесплатно), промокод SEVER10 и трекер статуса посылки по номеру.',
+      features: [
+        'Каталог с фильтрацией по категориям, размерам, сортировкой по цене и живым поиском',
+        'Выдвижная корзина с расчётом скидки SEVER10 (−10%) и выбором способа доставки',
+        'Серверный пересчёт стоимости, контроль складских остатков и трекер заказов по коду SVR-XXXX',
+        'Закрытая панель управления: KPI выручки, смена статусов отгрузки и CRUD каталога'
+      ],
+      stack: ['React 19', 'Vite 6', 'Node.js', 'SQLite', 'REST API'],
+      coverImage: '/uploads/sever-home.webp',
+      gallery: ['/uploads/sever-home.webp'],
+      demoUrl: 'https://tanj1ns.github.io/sever-store/',
+      repoUrl: 'https://github.com/tanj1ns/sever-store',
+      sortOrder: 3
+    },
+    {
+      slug: 'potok-crm',
+      title: 'ПОТОК CRM — Канбан-воронка сделок и аналитика выручки',
+      subtitle: 'Быстрая CRM-система для малого бизнеса: канбан-доска с перетаскиванием, история заметок по клиентам и аналитика по каналам.',
+      category: 'automation',
+      status: 'live',
+      description: 'Рабочее место отдела продаж: сделки распределяются по этапам «Новые → В работе → Оплачено → Завершено», перетаскиваются мышью или переводятся в один клик с мобильного, хранят хронологию комментариев и формируют аналитику конверсии и среднего чека.',
+      features: [
+        '4-этапная канбан-воронка с Drag-and-Drop и быстрым переводом этапов',
+        'Карточка сделки с историей заметок и созданием новых заявок (152-ФЗ + антиспам)',
+        'Вкладка аналитики: KPI выручки, конверсия в оплату и диаграммы по источникам лидов',
+        'Закрытый кабинет администратора: выгрузка базы в CSV (UTF-8 BOM) и сброс демо-воронки'
+      ],
+      stack: ['React 19', 'Vite 6', 'Node.js', 'SQLite', 'HTML5 Drag & Drop'],
+      coverImage: '/uploads/potok-home.webp',
+      gallery: ['/uploads/potok-home.webp'],
+      demoUrl: 'https://tanj1ns.github.io/potok-crm/',
+      repoUrl: 'https://github.com/tanj1ns/potok-crm',
+      sortOrder: 4
+    },
+    {
+      slug: 'zerno-tma',
+      title: 'ЗЕРНО — Telegram Mini App предзаказа спешелти-кофе',
+      subtitle: 'Мини-приложение внутри Telegram для предзаказа напитков к нужному времени с выбором молока, объёма, сиропа и списанием бонусов.',
+      category: 'mini_app',
+      status: 'live',
+      description: 'Мобильный интерфейс Telegram Mini App для спешелти-кофейни с интеграцией window.Telegram.WebApp: конструктор напитков, электронная карта гостя (списание бонусов до 30% чека), выбор кофейни и табло готовности на стойке.',
+      features: [
+        'Адаптивная оболочка Telegram Mini App с переключением компактного и широкого вида',
+        'Конструктор напитка: объём (250/350/450 мл), альтернативное молоко и сиропы с расчётом цены',
+        'Программа лояльности: начисление 7% и списание до 30% от суммы предзаказа',
+        'Терминал бариста в закрытой админ-панели: очередь выдачи #ZRN-XXX и стоп-лист позиций'
+      ],
+      stack: ['React 19', 'Telegram WebApp', 'Node.js', 'SQLite', 'Vite 6'],
+      coverImage: '/uploads/zerno-home.webp',
+      gallery: ['/uploads/zerno-home.webp'],
+      demoUrl: 'https://tanj1ns.github.io/zerno-tma/',
+      repoUrl: 'https://github.com/tanj1ns/zerno-tma',
+      sortOrder: 5
+    },
+    {
+      slug: 'puls-tg-bot',
+      title: 'ПУЛЬС — Telegram-бот поддержки, FAQ и рассылок + Пульт оператора',
+      subtitle: 'Двухсторонняя связка Telegram Bot API и веб-консоли: интерактивный эмулятор бота, тикет-система, автоответы FAQ и сегментные рассылки.',
+      category: 'telegram_bot',
+      status: 'live',
+      description: 'Платформа клиентского сервиса на базе Telegram Bot API: в левом окне доступен живой эмулятор бота с быстрыми кнопками и триггерами автоответов, а в правом — рабочее место оператора, где ответ сразу приходит в чат диалога.',
+      features: [
+        'Живой эмулятор @puls_support_bot с быстрыми командами (/start, статус заказа, возврат, тарифы)',
+        'Пульт оператора: список входящих тикетов, шаблоны ответов, смена статусов и обратный звонок',
+        'Нативный модуль Telegram Bot API на Node.js (long-polling getUpdates + sendMessage)',
+        'Закрытые настройки бота: управление правилами автоответов FAQ и запуск рассылок по сегментам'
+      ],
+      stack: ['Node.js HTTPS Bot API', 'React 19', 'SQLite', 'Vite 6'],
+      coverImage: '/uploads/puls-home.webp',
+      gallery: ['/uploads/puls-home.webp'],
+      demoUrl: 'https://tanj1ns.github.io/puls-tg-bot/',
+      repoUrl: 'https://github.com/tanj1ns/puls-tg-bot',
+      sortOrder: 6
+    }
+  ];
+
+  for (const p of showcaseProjects) {
+    upsertProject.run(
+      p.slug,
+      p.title,
+      p.subtitle,
+      p.category,
+      p.status,
+      p.description,
+      JSON.stringify(p.features),
+      JSON.stringify(p.stack),
+      p.coverImage,
+      JSON.stringify(p.gallery),
+      p.demoUrl,
       'Открыть живое демо',
-      'https://github.com/tanj1ns/apex-auto-service',
+      p.repoUrl,
       '2026',
       1,
       1,
-      1,
+      p.sortOrder,
       now
     );
   }
