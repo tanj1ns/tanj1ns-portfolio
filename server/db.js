@@ -62,6 +62,9 @@ function initDatabase() {
   return db;
 }
 
+const DEFAULT_ADMIN_SCRYPT =
+  'f93bfb7fe9067d1e0c7191f5b6be9dc4:09adc05a8caf10d0f02a4d60316f928fd30d7eec3fa2400fddfd6fb7a7fa787e51889fca283a457ca991e399fe4e85513f477d513a44492c2b9359a4fdb97297';
+
 function seed(db) {
   const now = new Date().toISOString();
 
@@ -69,10 +72,10 @@ function seed(db) {
   const userCount = db.prepare('SELECT COUNT(*) AS cnt FROM users').get().cnt;
   if (userCount === 0) {
     const email = (process.env.ADMIN_EMAIL || 'admin@tanj1ns.dev').trim().toLowerCase();
-    const pass = process.env.ADMIN_PASSWORD || 'admin12345';
+    const passHash = process.env.ADMIN_PASSWORD ? hashPassword(process.env.ADMIN_PASSWORD) : DEFAULT_ADMIN_SCRYPT;
     db.prepare(
       'INSERT INTO users (name, email, password_hash, role, created_at) VALUES (?, ?, ?, ?, ?)'
-    ).run('TanJ1ns', email, hashPassword(pass), 'admin', now);
+    ).run('TanJ1ns', email, passHash, 'admin', now);
   }
 
   // Профиль разработчика и ссылки на площадки

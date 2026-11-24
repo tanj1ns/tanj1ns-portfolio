@@ -20,7 +20,7 @@ npm start
 ```
 
 - Локальный сайт: `http://localhost:4000`
-- Вход в админ-панель (`http://localhost:4000/admin`): `admin@tanj1ns.dev` / `admin12345` *(при деплое на сервер задайте свои `ADMIN_EMAIL` и `ADMIN_PASSWORD` в переменных окружения)*.
+- Вход в админ-панель (`http://localhost:4000/admin`): учётные данные администратора задаются через переменные окружения `ADMIN_EMAIL` и `ADMIN_PASSWORD`.
 - **Опубликовать обновления на бесплатный GitHub Pages:**
   ```bash
   npm run publish

@@ -449,5 +449,5 @@ hardenHttpServer(server);
 
 server.listen(PORT, HOST, () => {
   console.log(`Портфолио TanJ1ns запущено на http://localhost:${PORT}`);
-  console.log('Админ по умолчанию: admin@tanj1ns.dev / admin12345');
+  console.log('Админ-вход настраивается через ADMIN_EMAIL / ADMIN_PASSWORD');
 });
