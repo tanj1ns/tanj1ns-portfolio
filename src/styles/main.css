@@ -1132,9 +1132,40 @@ button, input, select, textarea { font-family: inherit; }
   }
 }
 
+.admin-label-short {
+  display: none;
+}
+
 @media (max-width: 680px) {
   .container {
-    padding: 0 16px;
+    padding: 0 14px;
+  }
+  .header__inner {
+    gap: 8px;
+  }
+  .brand {
+    font-size: 0.92rem;
+    gap: 8px;
+    min-width: 0;
+  }
+  .header__right {
+    gap: 5px;
+    flex-shrink: 0;
+  }
+  .header__right .icon-btn {
+    width: 32px;
+    height: 32px;
+  }
+  .header__right .btn--sm {
+    padding: 5px 8px;
+    font-size: 0.74rem;
+    gap: 5px;
+  }
+  .admin-label-full {
+    display: none;
+  }
+  .admin-label-short {
+    display: inline;
   }
   .icon-btn.mobile-menu-btn {
     display: inline-flex;

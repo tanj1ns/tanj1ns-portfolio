@@ -269,7 +269,12 @@ export default function App() {
                 onClick={() => navigate(isAdminRoute ? '/' : '/admin')}
               >
                 <SlidersHorizontal size={14} />
-                {isAdminRoute ? 'Витрина' : 'Админ-панель'}
+                {isAdminRoute ? 'Витрина' : (
+                  <>
+                    <span className="admin-label-full">Админ-панель</span>
+                    <span className="admin-label-short">Админ</span>
+                  </>
+                )}
               </button>
             )}
           </div>
