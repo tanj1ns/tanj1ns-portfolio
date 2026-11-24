@@ -24,6 +24,11 @@ const {
   hardenHttpServer
 } = require('./security');
 
+const {
+  initClientAccount,
+  handleClientApi
+} = require('./clientAccount');
+
 const PORT = Number(process.env.PORT) || 4000;
 const HOST = process.env.HOST || '0.0.0.0';
 const ROOT_DIR = path.join(__dirname, '..');
@@ -31,7 +36,33 @@ const DIST_DIR = path.join(ROOT_DIR, 'dist');
 const PUBLIC_UPLOADS = path.join(ROOT_DIR, 'public', 'uploads');
 const RUNTIME_UPLOADS = path.join(DATA_DIR, 'uploads');
 
+const CLIENT_ACCOUNT_CONFIG = {
+  prefix: 'tanj1ns',
+  ordersTable: null,
+  seed: {
+    name: 'Дмитрий Соколов',
+    email: 'client@tanj1ns.dev',
+    phone: '+7 (925) 710-38-14',
+    password: process.env.DEMO_CLIENT_PASSWORD || 'client12345',
+    meta: {
+      company: 'ООО «Вектор»',
+      telegram: '@dsokolov_vec',
+      briefs: [
+        {
+          id: 1,
+          code: 'BRF-104',
+          title: 'Интернет-магазин с личным кабинетом и СДЭК',
+          budget: '140 000 ₽',
+          status: 'В разработке · Этап 2/4',
+          createdAt: '2026-11-20'
+        }
+      ]
+    }
+  }
+};
+
 const db = initDatabase();
+initClientAccount(db, CLIENT_ACCOUNT_CONFIG);
 
 const CATEGORIES = [
   { id: 'all', label: 'Все проекты' },
@@ -144,6 +175,15 @@ async function handleApi(req, res, pathname) {
 
   const isSecure = req.headers['x-forwarded-proto'] === 'https' || process.env.NODE_ENV === 'production';
   const user = getSessionUser(db, req);
+
+  if (pathname.startsWith('/api/client/')) {
+    return handleClientApi(req, res, parsed, db, CLIENT_ACCOUNT_CONFIG, {
+      sendJson,
+      readJson,
+      loginLimiter,
+      isSecure
+    });
+  }
 
   // Публичные данные витрины
   if (method === 'GET' && pathname === '/api/portfolio') {

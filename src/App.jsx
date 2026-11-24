@@ -16,7 +16,8 @@ import {
   Menu,
   X,
   Copy,
-  Check
+  Check,
+  User
 } from 'lucide-react';
 import {
   api,
@@ -27,12 +28,38 @@ import {
   CATEGORY_LABELS,
   STATUS_META
 } from './api.js';
+import { createClientAuth } from './clientAuth.js';
 import ProjectModal from './components/ProjectModal.jsx';
 import AdminPanel from './pages/AdminPanel.jsx';
+import ClientCabinet from './components/ClientCabinet.jsx';
 import CookieBanner, { setCookie } from './components/CookieBanner.jsx';
 import PrivacyModal from './components/PrivacyModal.jsx';
 
 const SECRET_HASH_SESSION_KEY = 'tanj1ns_secret_hash_cache';
+
+const portfolioClientAuth = createClientAuth({
+  prefix: 'tanj1ns',
+  demoSeed: {
+    name: 'Дмитрий Соколов',
+    email: 'client@tanj1ns.dev',
+    phone: '+7 (925) 710-38-14',
+    password: 'client12345',
+    meta: {
+      company: 'ООО «Вектор»',
+      telegram: '@dsokolov_vec',
+      briefs: [
+        {
+          id: 1,
+          code: 'BRF-104',
+          title: 'Интернет-магазин с личным кабинетом и СДЭК',
+          budget: '140 000 ₽',
+          status: 'В разработке · Этап 2/4',
+          createdAt: '2026-11-20'
+        }
+      ]
+    }
+  }
+});
 
 export default function App() {
   const [route, setRoute] = useState(window.location.pathname);
@@ -40,6 +67,8 @@ export default function App() {
   const [theme, setTheme] = useState(() => document.documentElement.getAttribute('data-theme') || 'dark');
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [client, setClient] = useState(null);
+  const [cabinetView, setCabinetView] = useState(false);
 
   const [activeCategory, setActiveCategory] = useState('all');
   const [search, setSearch] = useState('');
@@ -66,6 +95,10 @@ export default function App() {
   useEffect(() => {
     checkSecretHash();
     fetchPortfolio().catch(() => setLoading(false));
+    portfolioClientAuth
+      .me()
+      .then((res) => setClient(res.client || null))
+      .catch(() => {});
     const onPop = () => {
       setRoute(window.location.pathname);
       checkSecretHash();
@@ -162,6 +195,7 @@ export default function App() {
             className="brand"
             onClick={(e) => {
               e.preventDefault();
+              setCabinetView(false);
               navigate('/');
             }}
           >
@@ -173,14 +207,39 @@ export default function App() {
 
           {!isAdminRoute && (
             <nav className={`nav ${mobileNavOpen ? 'is-open' : ''}`} aria-label="Навигация">
-              <a href="#projects" className="nav__link" onClick={() => setMobileNavOpen(false)}>Проекты</a>
-              <a href="#workflow" className="nav__link" onClick={() => setMobileNavOpen(false)}>Как работаю</a>
-              <a href="#about" className="nav__link" onClick={() => setMobileNavOpen(false)}>Направления и стек</a>
-              <a href="#contacts" className="nav__link" onClick={() => setMobileNavOpen(false)}>Фриланс-площадки</a>
+              <a href="#projects" className="nav__link" onClick={() => { setCabinetView(false); setMobileNavOpen(false); }}>Проекты</a>
+              <a href="#workflow" className="nav__link" onClick={() => { setCabinetView(false); setMobileNavOpen(false); }}>Как работаю</a>
+              <a href="#about" className="nav__link" onClick={() => { setCabinetView(false); setMobileNavOpen(false); }}>Направления и стек</a>
+              <a href="#contacts" className="nav__link" onClick={() => { setCabinetView(false); setMobileNavOpen(false); }}>Фриланс-площадки</a>
+              <a
+                href="#cabinet"
+                className={`nav__link ${cabinetView ? 'is-active' : ''}`}
+                onClick={(e) => {
+                  e.preventDefault();
+                  setCabinetView(true);
+                  setMobileNavOpen(false);
+                }}
+              >
+                Личный кабинет
+              </a>
             </nav>
           )}
 
           <div className="header__right">
+            {!isAdminRoute && (
+              <button
+                type="button"
+                className="icon-btn"
+                onClick={() => {
+                  setMobileNavOpen(false);
+                  setCabinetView((v) => !v);
+                }}
+                aria-label="Личный кабинет"
+                title="Личный кабинет заказчика"
+              >
+                <User size={16} />
+              </button>
+            )}
             <button
               type="button"
               className="icon-btn"
@@ -231,6 +290,14 @@ export default function App() {
               }
             }}
             onBackHome={() => navigate('/')}
+          />
+        ) : cabinetView ? (
+          <ClientCabinet
+            client={client}
+            clientAuth={portfolioClientAuth}
+            onClientChange={setClient}
+            onBackToShowcase={() => setCabinetView(false)}
+            onOpenPrivacy={() => setPrivacyOpen(true)}
           />
         ) : (
           <>
