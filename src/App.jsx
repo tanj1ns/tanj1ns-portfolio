@@ -236,42 +236,70 @@ export default function App() {
           <>
             {/* HERO */}
             <section className="hero">
-              <div className="container">
-                <div className="hero__status">
-                  <span className="status-dot" />
-                  <span>{profile.availability || 'Принимаю заказы на фриланс-биржах'}</span>
+              <div className="container hero__grid">
+                <div className="hero__main">
+                  <div className="hero__status">
+                    <span className="status-dot" />
+                    <span>{profile.availability || 'Принимаю заказы на фриланс-биржах'}</span>
+                  </div>
+
+                  <h1 className="hero__title">
+                    {profile.headline || 'Делаю сайты, веб-приложения и Telegram-ботов под задачи бизнеса'}
+                  </h1>
+
+                  <p className="hero__bio">{profile.bio}</p>
+
+                  <div className="hero__actions">
+                    <a href="#projects" className="btn btn--primary">
+                      Смотреть проекты ({projects.length})
+                    </a>
+                    <a
+                      href="https://github.com/tanj1ns"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="btn btn--outline"
+                    >
+                      <Github size={16} />
+                      GitHub
+                    </a>
+                    <a href="#contacts" className="btn btn--ghost">
+                      Фриланс-площадки →
+                    </a>
+                  </div>
+
+                  {profile.focus_note && (
+                    <p className="hero__note">
+                      <ShieldCheck size={16} color="var(--success)" />
+                      <span>{profile.focus_note}</span>
+                    </p>
+                  )}
                 </div>
 
-                <h1 className="hero__title">
-                  {profile.headline || 'Делаю сайты, веб-приложения и Telegram-ботов под задачи бизнеса'}
-                </h1>
-
-                <p className="hero__bio">{profile.bio}</p>
-
-                <div className="hero__actions">
-                  <a href="#projects" className="btn btn--primary">
-                    Смотреть проекты ({projects.length})
-                  </a>
-                  <a
-                    href="https://github.com/tanj1ns"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="btn btn--outline"
-                  >
-                    <Github size={16} />
-                    GitHub
-                  </a>
-                  <a href="#contacts" className="btn btn--ghost">
-                    Фриланс-площадки →
-                  </a>
-                </div>
-
-                {profile.focus_note && (
-                  <p className="hero__note">
-                    <ShieldCheck size={16} color="var(--success)" />
-                    <span>{profile.focus_note}</span>
-                  </p>
-                )}
+                <aside className="hero-spec" aria-label="Инженерный профиль">
+                  <div className="hero-spec__head">
+                    <span className="mono">SYS // TANJ1NS.DEV</span>
+                    <span className="mono">RU-PROD</span>
+                  </div>
+                  <div className="hero-spec__list">
+                    <div className="hero-spec__row">
+                      <span>Витрина</span>
+                      <strong className="mono">{projects.length} live-проектов</strong>
+                    </div>
+                    <div className="hero-spec__row">
+                      <span>Стек</span>
+                      <strong className="mono">React · Node.js · SQLite · Bot API</strong>
+                    </div>
+                    <div className="hero-spec__row">
+                      <span>Деплой</span>
+                      <strong className="mono">GitHub Pages + Docker РФ</strong>
+                    </div>
+                    <div className="hero-spec__row">
+                      <span>Защита</span>
+                      <strong className="mono">152-ФЗ · CSP · Anti-bot</strong>
+                    </div>
+                  </div>
+                  <div className="hero-spec__foot mono">0 .map files · SameSite=Lax · WebP</div>
+                </aside>
               </div>
             </section>
 
@@ -339,6 +367,10 @@ export default function App() {
                       const st = STATUS_META[project.status] || STATUS_META.live;
                       return (
                         <article key={project.id} className="project-card">
+                          <div className="project-card__chrome" onClick={() => setSelectedProject(project)}>
+                            <span className="chrome-dots" aria-hidden="true"><i /><i /><i /></span>
+                            <span className="chrome-url mono">tanj1ns.github.io/{project.slug}</span>
+                          </div>
                           <div className="project-card__media" onClick={() => setSelectedProject(project)}>
                             {project.coverImage ? (
                               <img src={resolveAssetUrl(project.coverImage)} alt={project.title} loading="lazy" draggable={false} />
