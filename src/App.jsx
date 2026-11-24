@@ -29,6 +29,8 @@ import {
 } from './api.js';
 import ProjectModal from './components/ProjectModal.jsx';
 import AdminPanel from './pages/AdminPanel.jsx';
+import CookieBanner, { setCookie } from './components/CookieBanner.jsx';
+import PrivacyModal from './components/PrivacyModal.jsx';
 
 const SECRET_HASH_SESSION_KEY = 'tanj1ns_secret_hash_cache';
 
@@ -44,6 +46,8 @@ export default function App() {
   const [selectedProject, setSelectedProject] = useState(null);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [copiedEmail, setCopiedEmail] = useState(false);
+  const [privacyOpen, setPrivacyOpen] = useState(false);
+  const [cookieForceOpen, setCookieForceOpen] = useState(false);
 
   async function fetchPortfolio() {
     const res = await api('/api/portfolio');
@@ -118,7 +122,12 @@ export default function App() {
     const next = theme === 'dark' ? 'light' : 'dark';
     setTheme(next);
     document.documentElement.setAttribute('data-theme', next);
-    localStorage.setItem('tanj1ns_theme', next);
+    setCookie('tanj1ns_theme', next);
+    try {
+      localStorage.setItem('tanj1ns_theme', next);
+    } catch {
+      // ignore
+    }
   }
 
   const projects = data?.projects || [];
@@ -558,13 +567,28 @@ export default function App() {
       <footer className="footer">
         <div className="container footer__inner">
           <span>© {new Date().getFullYear()} {profile.display_name || 'TanJ1ns'} · {profile.role_title || 'Full-Stack разработчик'}</span>
-          <span>React + Vite + Node.js + SQLite</span>
+          <span className="footer__meta">
+            <span>React + Vite + Node.js + SQLite</span>
+            <span aria-hidden="true">·</span>
+            <button type="button" className="link-inline" onClick={() => setPrivacyOpen(true)}>Политика cookie</button>
+            <span aria-hidden="true">·</span>
+            <button type="button" className="link-inline" onClick={() => setCookieForceOpen(true)}>Настройки cookie</button>
+          </span>
         </div>
       </footer>
 
       {selectedProject && (
         <ProjectModal project={selectedProject} onClose={() => setSelectedProject(null)} />
       )}
+
+      {privacyOpen && <PrivacyModal onClose={() => setPrivacyOpen(false)} />}
+
+      <CookieBanner
+        prefix="tanj1ns"
+        forceOpen={cookieForceOpen}
+        onCloseForce={() => setCookieForceOpen(false)}
+        onOpenPrivacy={() => setPrivacyOpen(true)}
+      />
     </>
   );
 }
