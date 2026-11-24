@@ -8,6 +8,7 @@ const DEFAULT_ADMIN_PASS_HASH = '1f908563b0fd366c903a0ac83605723b9aba2241b1b2024
 const STATIC_DB_KEY = 'tanj1ns_static_cms_v1';
 const STATIC_SESSION_KEY = 'tanj1ns_static_admin_session_v1';
 const STATIC_PASS_HASH_KEY = 'tanj1ns_static_admin_hash_v1';
+const LOGIN_GUARD_KEY = 'tanj1ns_login_guard_v1';
 const GH_TOKEN_KEY = 'tanj1ns_gh_publish_token_v1';
 
 let staticModeFlag = null;
@@ -39,6 +40,12 @@ export function resolveAssetUrl(url) {
   if (/^(https?:|data:|blob:|\.\.?\/)/i.test(url)) return url;
   if (url.startsWith('/')) return `.${url}`;
   return url;
+}
+
+export function safeHref(url) {
+  const s = String(url || '').trim();
+  if (!s) return '#';
+  return /^(https?:\/\/|mailto:|tel:|#|\.\.?\/|\/(?!\/))/i.test(s) ? s : '#';
 }
 
 async function fetchBaseSnapshot() {
@@ -105,12 +112,41 @@ async function staticCmsApi(url, options = {}) {
   }
 
   if (method === 'POST' && url === '/api/auth/login') {
+    const now = Date.now();
+    let guard = { attempts: 0, firstAt: now, lockedUntil: 0 };
+    try {
+      const savedGuard = JSON.parse(localStorage.getItem(LOGIN_GUARD_KEY) || 'null');
+      if (savedGuard && typeof savedGuard === 'object') guard = savedGuard;
+    } catch {
+      // ignore
+    }
+
+    await new Promise((r) => setTimeout(r, 450));
+
+    if (guard.lockedUntil && guard.lockedUntil > now) {
+      throw new Error('Слишком много попыток входа. Повторите через несколько минут.');
+    }
+
+    if (!guard.firstAt || now - guard.firstAt > 600_000) {
+      guard = { attempts: 0, firstAt: now, lockedUntil: 0 };
+    }
+
     const email = String(body.email || '').trim().toLowerCase();
     const password = String(body.password || '');
     const digest = await sha256Hex(ADMIN_PASS_SALT + password);
     if (email !== ADMIN_EMAIL || digest !== getStoredAdminPassHash()) {
+      guard.attempts = (guard.attempts || 0) + 1;
+      if (guard.attempts >= 5) {
+        guard.lockedUntil = Date.now() + 5 * 60 * 1000;
+      }
+      localStorage.setItem(LOGIN_GUARD_KEY, JSON.stringify(guard));
+      if (guard.lockedUntil > Date.now()) {
+        throw new Error('Слишком много попыток входа. Доступ временно заблокирован на 5 минут.');
+      }
       throw new Error('Неверный email или пароль');
     }
+
+    localStorage.removeItem(LOGIN_GUARD_KEY);
     const session = {
       name: 'TanJ1ns',
       email: ADMIN_EMAIL,

@@ -4,6 +4,7 @@ import {
   api,
   isStaticHost,
   resolveAssetUrl,
+  safeHref,
   exportStaticPortfolioPayload,
   publishStaticToGithub,
   getSavedGhToken,
@@ -463,7 +464,7 @@ export default function AdminPanel({ user, onAuthChange, onBackHome }) {
 
                       <div style={{ display: 'flex', gap: 8 }}>
                         {p.demoUrl && (
-                          <a href={p.demoUrl} target="_blank" rel="noopener noreferrer" className="icon-btn" title="Открыть демо">
+                          <a href={safeHref(p.demoUrl)} target="_blank" rel="noopener noreferrer" className="icon-btn" title="Открыть демо">
                             <ExternalLink size={15} />
                           </a>
                         )}

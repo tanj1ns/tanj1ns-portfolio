@@ -16,6 +16,13 @@ const {
   getSessionUser,
   buildCookie
 } = require('./auth');
+const {
+  apiLimiter,
+  loginLimiter,
+  applySecurityHeaders,
+  verifySameOrigin,
+  hardenHttpServer
+} = require('./security');
 
 const PORT = Number(process.env.PORT) || 4000;
 const HOST = process.env.HOST || '0.0.0.0';
@@ -58,14 +65,14 @@ function sendJson(res, status, data, headers = {}) {
   res.end(JSON.stringify(data));
 }
 
-function readJson(req, maxBytes = 8 * 1024 * 1024) {
+function readJson(req, maxBytes = 32 * 1024) {
   return new Promise((resolve, reject) => {
     const chunks = [];
     let size = 0;
     req.on('data', (chunk) => {
       size += chunk.length;
       if (size > maxBytes) {
-        reject(new Error('Файл или запрос превышает лимит 8 МБ'));
+        reject(new Error('Размер запроса превышает допустимый лимит'));
         req.destroy();
         return;
       }
@@ -121,6 +128,21 @@ async function handleApi(req, res, pathname) {
     return sendJson(res, 200, { ok: true, service: 'tanj1ns-portfolio' });
   }
 
+  const rate = apiLimiter(req);
+  if (!rate.allowed) {
+    return sendJson(
+      res,
+      429,
+      { ok: false, error: 'Слишком много запросов. Подождите минуту.' },
+      { 'Retry-After': String(rate.retryAfterSec) }
+    );
+  }
+
+  if (!verifySameOrigin(req)) {
+    return sendJson(res, 403, { ok: false, error: 'Запрос отклонён политикой безопасности источника (CSRF)' });
+  }
+
+  const isSecure = req.headers['x-forwarded-proto'] === 'https' || process.env.NODE_ENV === 'production';
   const user = getSessionUser(db, req);
 
   // Публичные данные витрины
@@ -140,6 +162,16 @@ async function handleApi(req, res, pathname) {
 
   // Авторизация администратора
   if (method === 'POST' && pathname === '/api/auth/login') {
+    const loginRate = loginLimiter(req);
+    if (!loginRate.allowed) {
+      return sendJson(
+        res,
+        429,
+        { ok: false, error: 'Слишком много попыток входа. Попробуйте через 10 минут.' },
+        { 'Retry-After': String(loginRate.retryAfterSec) }
+      );
+    }
+
     const body = await readJson(req);
     const email = String(body.email || '').trim().toLowerCase();
     const password = String(body.password || '');
@@ -152,13 +184,13 @@ async function handleApi(req, res, pathname) {
       res,
       200,
       { ok: true, user: { id: row.id, name: row.name, email: row.email, role: row.role } },
-      { 'Set-Cookie': buildCookie(token) }
+      { 'Set-Cookie': buildCookie(token, false, isSecure) }
     );
   }
 
   if (method === 'POST' && pathname === '/api/auth/logout') {
     if (user && user.token) deleteSession(db, user.token);
-    return sendJson(res, 200, { ok: true }, { 'Set-Cookie': buildCookie('', true) });
+    return sendJson(res, 200, { ok: true }, { 'Set-Cookie': buildCookie('', true, isSecure) });
   }
 
   // ==================== АДМИН API ====================
@@ -312,7 +344,7 @@ async function handleApi(req, res, pathname) {
 
     // Загрузка скриншотов проектов
     if (method === 'POST' && pathname === '/api/admin/upload') {
-      const body = await readJson(req);
+      const body = await readJson(req, 8 * 1024 * 1024);
       const dataUrl = String(body.dataUrl || '');
       const match = dataUrl.match(/^data:image\/(png|jpeg|jpg|webp);base64,([A-Za-z0-9+/=]+)$/);
       if (!match) {
@@ -331,6 +363,7 @@ async function handleApi(req, res, pathname) {
 }
 
 const server = http.createServer(async (req, res) => {
+  applySecurityHeaders(res);
   try {
     const parsed = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
     const pathname = parsed.pathname;
@@ -350,9 +383,16 @@ const server = http.createServer(async (req, res) => {
     // Отдача собранного React-приложения из dist/
     if (fs.existsSync(DIST_DIR)) {
       const safeRel = path.normalize(pathname.replace(/^\/+/, '')).replace(/^(\.\.[/\\])+/, '');
-      const candidate = path.join(DIST_DIR, safeRel || 'index.html');
-      if (safeRel && fs.existsSync(candidate) && fs.statSync(candidate).isFile()) {
-        return serveFile(res, candidate);
+      const absCandidate = path.resolve(DIST_DIR, safeRel || 'index.html');
+      const relToDist = path.relative(DIST_DIR, absCandidate);
+      if (
+        safeRel &&
+        !relToDist.startsWith('..') &&
+        !path.isAbsolute(relToDist) &&
+        fs.existsSync(absCandidate) &&
+        fs.statSync(absCandidate).isFile()
+      ) {
+        return serveFile(res, absCandidate);
       }
       return serveFile(res, path.join(DIST_DIR, 'index.html'));
     }
@@ -364,6 +404,8 @@ const server = http.createServer(async (req, res) => {
     sendJson(res, 500, { ok: false, error: err.message || 'Внутренняя ошибка сервера' });
   }
 });
+
+hardenHttpServer(server);
 
 server.listen(PORT, HOST, () => {
   console.log(`Портфолио TanJ1ns запущено на http://localhost:${PORT}`);

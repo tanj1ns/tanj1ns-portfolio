@@ -19,6 +19,7 @@ import {
   isStaticHost,
   isSecretAdminHash,
   resolveAssetUrl,
+  safeHref,
   CATEGORY_LABELS,
   STATUS_META
 } from './api.js';
@@ -295,7 +296,7 @@ export default function App() {
                         <article key={project.id} className="project-card">
                           <div className="project-card__media" onClick={() => setSelectedProject(project)}>
                             {project.coverImage ? (
-                              <img src={resolveAssetUrl(project.coverImage)} alt={project.title} loading="lazy" />
+                              <img src={resolveAssetUrl(project.coverImage)} alt={project.title} loading="lazy" draggable={false} />
                             ) : (
                               <div className="project-card__placeholder">
                                 <Layers size={28} />
@@ -336,7 +337,7 @@ export default function App() {
                               </button>
                               {project.demoUrl && (
                                 <a
-                                  href={project.demoUrl}
+                                  href={safeHref(project.demoUrl)}
                                   target="_blank"
                                   rel="noopener noreferrer"
                                   className="btn btn--outline btn--sm"
@@ -347,7 +348,7 @@ export default function App() {
                               )}
                               {project.repoUrl && (
                                 <a
-                                  href={project.repoUrl}
+                                  href={safeHref(project.repoUrl)}
                                   target="_blank"
                                   rel="noopener noreferrer"
                                   className="btn btn--ghost btn--sm"
@@ -429,21 +430,25 @@ export default function App() {
                 </div>
 
                 <div className="links-grid">
-                  {(profile.links || []).map((lnk, idx) => (
-                    <a
-                      key={idx}
-                      href={lnk.url}
-                      target={lnk.url.startsWith('mailto:') ? undefined : '_blank'}
-                      rel={lnk.url.startsWith('mailto:') ? undefined : 'noopener noreferrer'}
-                      className="link-card"
-                    >
-                      <div>
-                        <span className="link-card__label">{lnk.label}</span>
-                        <span className="link-card__handle mono">{lnk.handle}</span>
-                      </div>
-                      <ArrowUpRight size={18} color="var(--text-muted)" />
-                    </a>
-                  ))}
+                  {(profile.links || []).map((lnk, idx) => {
+                    const href = safeHref(lnk.url);
+                    const isMailOrTel = href.startsWith('mailto:') || href.startsWith('tel:');
+                    return (
+                      <a
+                        key={idx}
+                        href={href}
+                        target={isMailOrTel ? undefined : '_blank'}
+                        rel={isMailOrTel ? undefined : 'noopener noreferrer'}
+                        className="link-card"
+                      >
+                        <div>
+                          <span className="link-card__label">{lnk.label}</span>
+                          <span className="link-card__handle mono">{lnk.handle}</span>
+                        </div>
+                        <ArrowUpRight size={18} color="var(--text-muted)" />
+                      </a>
+                    );
+                  })}
                 </div>
               </div>
             </section>

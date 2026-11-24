@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { ExternalLink, Github, X } from 'lucide-react';
-import { resolveAssetUrl, CATEGORY_LABELS, STATUS_META } from '../api.js';
+import { resolveAssetUrl, safeHref, CATEGORY_LABELS, STATUS_META } from '../api.js';
 
 export default function ProjectModal({ project, onClose }) {
   const images = (
@@ -47,7 +47,7 @@ export default function ProjectModal({ project, onClose }) {
 
         {activeImg && (
           <div>
-            <img src={activeImg} alt={project.title} className="modal-gallery__main" />
+            <img src={activeImg} alt={project.title} className="modal-gallery__main" draggable={false} />
             {images.length > 1 && (
               <div className="modal-gallery__thumbs">
                 {images.map((src, idx) => (
@@ -55,6 +55,7 @@ export default function ProjectModal({ project, onClose }) {
                     key={idx}
                     src={src}
                     alt=""
+                    draggable={false}
                     className={`modal-thumb ${src === activeImg ? 'is-active' : ''}`}
                     onClick={() => setActiveImg(src)}
                   />
@@ -89,13 +90,13 @@ export default function ProjectModal({ project, onClose }) {
 
         <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', paddingTop: 12, borderTop: '1px solid var(--border)' }}>
           {project.demoUrl && (
-            <a href={project.demoUrl} target="_blank" rel="noopener noreferrer" className="btn btn--primary">
+            <a href={safeHref(project.demoUrl)} target="_blank" rel="noopener noreferrer" className="btn btn--primary">
               <ExternalLink size={16} />
               {project.demoLabel || 'Открыть демо'}
             </a>
           )}
           {project.repoUrl && (
-            <a href={project.repoUrl} target="_blank" rel="noopener noreferrer" className="btn btn--outline">
+            <a href={safeHref(project.repoUrl)} target="_blank" rel="noopener noreferrer" className="btn btn--outline">
               <Github size={16} />
               Код на GitHub
             </a>

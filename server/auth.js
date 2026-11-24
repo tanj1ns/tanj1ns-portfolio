@@ -38,6 +38,7 @@ function parseCookies(header) {
 }
 
 function createSession(db, userId) {
+  db.prepare('DELETE FROM sessions WHERE expires_at < ?').run(Date.now());
   const token = crypto.randomBytes(32).toString('hex');
   const expiresAt = Date.now() + SESSION_TTL_MS;
   db.prepare('INSERT INTO sessions (token, user_id, expires_at) VALUES (?, ?, ?)').run(
@@ -74,10 +75,11 @@ function getSessionUser(db, req) {
   return { id: row.id, name: row.name, email: row.email, role: row.role, token };
 }
 
-function buildCookie(token, clear = false) {
-  if (clear) return `${SESSION_COOKIE}=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0`;
+function buildCookie(token, clear = false, isSecure = false) {
+  const sec = isSecure ? '; Secure' : '';
+  if (clear) return `${SESSION_COOKIE}=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0${sec}`;
   const maxAge = Math.floor(SESSION_TTL_MS / 1000);
-  return `${SESSION_COOKIE}=${encodeURIComponent(token)}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${maxAge}`;
+  return `${SESSION_COOKIE}=${encodeURIComponent(token)}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${maxAge}${sec}`;
 }
 
 module.exports = {
